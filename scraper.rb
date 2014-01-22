@@ -1,3 +1,4 @@
+require 'scraperwiki'
 # Migrated this scraper from https://github.com/openaustralia/planningalerts-parsers/blob/master/lib/spear_scraper.rb
 
 require 'mechanize'
@@ -33,7 +34,7 @@ def extract_page_data(page)
         'date_scraped' => Date.today.to_s
       }
 
-      if (ScraperWiki.select("* from swdata where `council_reference`='#{record['council_reference']}'").empty? rescue true)
+      if (ScraperWiki.select("* from data where `council_reference`='#{record['council_reference']}'").empty? rescue true)
         # Get more detailed information by going to the application detail page (but only if necessary)
         record["description"] = extract_description(info_url)
         #p record
