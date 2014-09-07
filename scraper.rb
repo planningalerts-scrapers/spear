@@ -2,15 +2,17 @@ require 'scraperwiki'
 # Migrated this scraper from https://github.com/openaustralia/planningalerts-parsers/blob/master/lib/spear_scraper.rb
 
 require 'mechanize'
+require 'json'
 
 # Extracts all the data on a single page of results
-def extract_page_data(page)
+def extract_page_data(data)
   comment_url = "https://www.spear.land.vic.gov.au/spear/pages/public-and-other-users/objectors.shtml"
 
   apps = []
   # Skip first two row (header) and last row (page navigation)
-  page.at('div#list table').search('tr')[2..-2].each do |row|
-    values = row.search('td')
+
+
+  JSON.parse(data)["resultRows"].each do |row|
     
     # Type appears to be either something like "Certification of a Plan" or "Planning Permit and Certification"
     # I think we need to look in detail at the application to get the description
@@ -22,13 +24,14 @@ def extract_page_data(page)
     # I'm going to assume that everything else is purely "procedural" and should not be recorded here
 
     # If there is a link on the address record this development application
-    if values[0].at('a')
-      info_url = (page.uri + URI.parse(values[0].at('a').attributes['href'])).to_s
+    
+      info_url = "https://www.spear.land.vic.gov.au/spear/applicationDetails/RetrievePublicApplication.do?cacheApplicationListContext=true&spearNum=#{row['spearReference']}"
+      # puts row.to_yaml
       record = {
         # We're using the SPEAR Ref # because we want that to be unique across the "authority"
-        'council_reference' => values[8].inner_html.strip,
-        'address' => values[0].at('a').inner_html.strip,
-        'date_received' => Date.strptime(values[10].inner_html.strip, "%d/%m/%Y").to_s,
+        'council_reference' => row['spearReference'],
+        'address' => row['property'],
+        'date_received' => Date.strptime(row['submittedDate'], "%d/%m/%Y").to_s,
         'info_url' => info_url,
         'comment_url' => comment_url,
         'date_scraped' => Date.today.to_s
@@ -43,7 +46,6 @@ def extract_page_data(page)
         #puts "Skipping already saved record " + record['council_reference']
       end
 
-    end
   end
 end
 
@@ -80,12 +82,10 @@ def applications(web_form_name)
   # TODO: Is there a more sensible way to pick the item in the drop-down?
   form.field_with(:name => "councilName").options.find{|o| o.text == web_form_name}.click
   page = form.submit
-  
-  begin
-    extract_page_data(page)
-    next_link = page.link_with(:text => /next/)
-    page = next_link.click if next_link
-  end until next_link.nil? 
+   
+  response = agent.post("https://www.spear.land.vic.gov.au/spear/resources/applicationlist/publicSearch", '{"applicationListSearchRequest":{"searchFilters":[],"searchText":null,"myApplications":false,"watchedApplications":false,"searchInitiatedByUserClickEvent":false,"sortField":"SPEAR_REF","sortDirection":"desc","startRow":0},"tab":"ALL"}', {'Content-Type' => 'application/json'})
+  extract_page_data(response.body)
+
 end
 
 url = "http://www.spear.land.vic.gov.au/spear/publicSearch/Search.do"
