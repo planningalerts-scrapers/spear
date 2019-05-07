@@ -37,14 +37,10 @@ def extract_page_data(data)
         'date_scraped' => Date.today.to_s
       }
 
-      if (ScraperWiki.select("* from data where `council_reference`='#{record['council_reference']}'").empty? rescue true)
-        # Get more detailed information by going to the application detail page (but only if necessary)
-        record["description"] = extract_description(info_url)
-        #p record
-        ScraperWiki.save_sqlite(['council_reference'], record)
-      else
-        #puts "Skipping already saved record " + record['council_reference']
-      end
+      # Get more detailed information by going to the application detail page (but only if necessary)
+      record["description"] = extract_description(info_url)
+      #p record
+      ScraperWiki.save_sqlite(['council_reference'], record)
 
   end
 end
