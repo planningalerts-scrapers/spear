@@ -31,11 +31,13 @@ def extract_page_data(data)
         # We're using the SPEAR Ref # because we want that to be unique across the "authority"
         'council_reference' => row['spearReference'],
         'address' => row['property'],
-        'date_received' => Date.strptime(row['submittedDate'], "%d/%m/%Y").to_s,
         'info_url' => info_url,
         'comment_url' => comment_url,
         'date_scraped' => Date.today.to_s
       }
+      if row['submittedDate']
+        record['date_received'] = Date.strptime(row['submittedDate'], "%d/%m/%Y").to_s
+      end
 
       # Get more detailed information by going to the application detail page (but only if necessary)
       record["description"] = extract_description(info_url)
@@ -60,10 +62,11 @@ def extract_description(info_url)
   table = page.at('div#bodypadding table')
   # For some reason occasionaly this page can be entirely blank. If it is just do our best and continue
   if table
-    table.search('table')[1].search('tr').find do |row|
+    row = table.search('table')[1].search('tr').find do |row|
       # <th> tag contains the name of the field, <td> tag contains its value
       row.at('th') && row.at('th').inner_text.strip == "Intended use"
-    end.at('td').inner_text.strip
+    end
+    row.at('td').inner_text.strip if row
   end
 end
 
