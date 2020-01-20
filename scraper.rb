@@ -39,6 +39,9 @@ def extract_page_data(data)
 
       # Get more detailed information by going to the application detail page (but only if necessary)
       record["description"] = extract_description(info_url)
+      if record["description"] == "" 
+        record["description"] = row["applicationTypeDisplay"]
+      end
       #p record
       ScraperWiki.save_sqlite(['council_reference'], record)
 
