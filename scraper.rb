@@ -10,13 +10,15 @@ tokens = HTTParty.post(
   headers: { "Authorization" => "Basic #{BASIC_AUTH_FOR_TOKEN}"}
 )
 
+headers = {
+  "Authorization" => "Bearer #{tokens['access_token']}",
+  "Content-Type" => "application/json"
+}
+
 authorities = HTTParty.post(
   "https://www.spear.land.vic.gov.au/spear/api/v1/site/search",
   body: '{"data":{"searchType":"publicsearch","searchTypeFilter":"all","searchText":null,"showInactiveSites":false}}',
-  headers: {
-    "Authorization" => "Bearer #{tokens['access_token']}",
-    "Content-Type" => "application/json"
-  }
+  headers: headers
 )
 
 authorities["data"].each do |authority|
@@ -50,10 +52,7 @@ authorities["data"].each do |authority|
   applications = HTTParty.post(
     "https://www.spear.land.vic.gov.au/spear/api/v1/applicationlist/publicSearch",
     body: query.to_json,
-    headers: {
-      "Authorization" => "Bearer #{tokens['access_token']}",
-      "Content-Type" => "application/json"
-    }
+    headers: headers
   )
   pp applications
   exit
