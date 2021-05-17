@@ -93,12 +93,6 @@ headers = {
   "Content-Type" => "application/json"
 }
 
-# For testing using a council with LOTS of applications
-all_applications("255", headers) do |record|
-  pp record
-end
-exit
-
 authorities = HTTParty.post(
   "https://www.spear.land.vic.gov.au/spear/api/v1/site/search",
   body: '{"data":{"searchType":"publicsearch","searchTypeFilter":"all","searchText":null,"showInactiveSites":false}}',
@@ -109,5 +103,9 @@ authorities["data"].each do |authority|
   puts "Getting applications for #{authority['name']}..."
   id = authority["id"]
 
-  applications_page(id, 0, headers)
+  all_applications(id, headers) do |record|
+    # We only want the last 28 days
+    break if Date.parse(record["date_received"]) < Date.today - 28
+    pp record
+  end
 end
