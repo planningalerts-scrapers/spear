@@ -4,8 +4,8 @@ require "httparty"
 # Password required to get token
 BASIC_AUTH_FOR_TOKEN = "Y2xpZW50YXBwOg=="
 
-# TODO: Only get applications that are being advertised?
 def applications_page(authority_id, start_row, headers)
+  # Getting the most recently submitted applications for the particular authority
   query = {
     "data": {
       "applicationListSearchRequest": {
@@ -36,21 +36,36 @@ def applications_page(authority_id, start_row, headers)
     headers: headers
   )
 
-  applications["data"]["resultRows"].map do |a|
+  applications["data"]["resultRows"].each do |a|
     if a["submittedDate"].nil?
       puts "SubmittedDate is empty for #{a['spearReference']}. So, skipping."
       next
     end
-    {
+
+    # We need to get more detailed information to get the application id (for
+    # the info_url) and a half-way decent description
+    # This requires two more API calls. Ugh.
+
+    result = HTTParty.get(
+      "https://www.spear.land.vic.gov.au/spear/api/v1/applications/retrieve/#{a['spearReference']}?publicView=true",
+      headers: headers
+    )
+    application_id = result["data"]["applicationId"]
+
+    detail = HTTParty.get(
+      "https://www.spear.land.vic.gov.au/spear/api/v1/applications/#{application_id}/summary?publicView=true",
+      headers: headers
+    )
+
+    yield(
       "council_reference" => a["spearReference"],
       "address" => a["property"],
-      # TODO: Description is not terribly helpful. Probably want to get more detailed info
-      "description" => a["applicationTypeDisplay"],
-      # "info_url"
+      "description" => detail["data"]["intendedUse"],
+      "info_url" => "https://www.spear.land.vic.gov.au/spear/app/public/applications/#{application_id}/summary",
       "date_scraped" => Date.today.to_s,
       "date_received" => Date.strptime(a["submittedDate"], "%d/%m/%Y").to_s
-    }
-  end.compact
+    )
+  end
 end
 
 tokens = HTTParty.post(
@@ -65,7 +80,9 @@ headers = {
 }
 
 # For testing using a council with LOTS of applications
-pp applications_page("255", 0, headers)
+applications_page("255", 0, headers) do |record|
+  pp record
+end
 exit
 
 authorities = HTTParty.post(
