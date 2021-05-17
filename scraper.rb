@@ -19,7 +19,7 @@ def applications_page(authority_id, start_row, headers)
         "myApplications": false,
         "watchedApplications": false,
         "searchInitiatedByUserClickEvent": false,
-        "sortField": "SPEAR_REF",
+        "sortField": "SUBMITTED_DATE",
         "sortDirection": "desc",
         "startRow": start_row
       },
