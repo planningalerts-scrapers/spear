@@ -54,6 +54,6 @@ authorities["data"].each do |authority|
     body: query.to_json,
     headers: headers
   )
-  pp applications
+  pp applications["data"]["resultRows"].map{|a| a["spearReference"]}
   exit
 end
