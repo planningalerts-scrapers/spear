@@ -66,6 +66,20 @@ def applications_page(authority_id, start_row, headers)
       "date_received" => Date.strptime(a["submittedDate"], "%d/%m/%Y").to_s
     )
   end
+
+  [applications["data"]["resultRows"].count, applications["data"]["numFound"]]
+end
+
+def all_applications(authority_id, headers)
+  start_row = 0
+
+  loop do
+    number_on_page, total_no = applications_page(authority_id, start_row, headers) do |record|
+      yield record
+    end
+    start_row += number_on_page
+    break if start_row >= total_no
+  end
 end
 
 tokens = HTTParty.post(
@@ -80,7 +94,7 @@ headers = {
 }
 
 # For testing using a council with LOTS of applications
-applications_page("255", 0, headers) do |record|
+all_applications("255", headers) do |record|
   pp record
 end
 exit
