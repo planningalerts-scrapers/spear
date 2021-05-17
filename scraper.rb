@@ -106,6 +106,8 @@ authorities["data"].each do |authority|
   all_applications(id, headers) do |record|
     # We only want the last 28 days
     break if Date.parse(record["date_received"]) < Date.today - 28
-    pp record
+
+    puts "Saving #{record['council_reference']}..."
+    ScraperWiki.save_sqlite(["council_reference"], record)
   end
 end
