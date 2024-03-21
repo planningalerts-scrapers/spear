@@ -56,16 +56,18 @@ def applications_page(authority_id, start_row, headers)
       "https://www.spear.land.vic.gov.au/spear/api/v1/applications/#{application_id}/summary?publicView=true",
       headers: headers
     )
-
-    yield(
-      "council_reference" => a["spearReference"],
-      "address" => a["property"],
-      "description" => detail["data"]["intendedUse"],
-      "info_url" => "https://www.spear.land.vic.gov.au/spear/app/public/applications/#{application_id}/summary",
-      "date_scraped" => Date.today.to_s,
-      "date_received" => Date.strptime(a["submittedDate"], "%d/%m/%Y").to_s
-    )
-  end
+    if detail && detail["data"] 
+      yield(
+        "council_reference" => a["spearReference"],
+        "address" => a["property"],
+        "description" => detail["data"]["intendedUse"].to_s, # Converts nil to an empty string - avoid type mismatch
+        "info_url" => "https://www.spear.land.vic.gov.au/spear/app/public/applications/#{application_id}/summary",
+        "date_scraped" => Date.today.to_s,
+        "date_received" => Date.strptime(a["submittedDate"], "%d/%m/%Y").to_s
+      )
+    else
+      puts "Skipping #{a['spearReference']} due to missing detail data."
+end
 
   [applications["data"]["resultRows"].count, applications["data"]["numFound"]]
 end
