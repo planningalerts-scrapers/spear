@@ -1,2 +1,28 @@
 # Ignore output of scraper
 data.sqlite
+
+# IDEs and AI assistants
+/.aider*
+/.idea
+/.vscode*
+
+# Ignore vim files:
+*~
+*.swp
+*.swo
+
+# Ignore patch files
+*.patch
+*.rej
+
+# Used by direnv / dotenv library to load environment variables.
+.env*
+
+# temp files
+,*
+/tmp/
+
+# Ignore Byebug command history file.
+.byebug_history
+
+
