@@ -25,4 +25,8 @@ data.sqlite
 # Ignore Byebug command history file.
 .byebug_history
 
-
+# Claude Code's local per-project notes, settings, worktrees and scheduler lock
+/CLAUDE.local.md
+/.claude/*.local*
+/.claude/worktrees/
+/.claude/scheduled_tasks.*
